@@ -1,5 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
+import pandas as pd
+import matplotlib
+matplotlib.use('Agg')  # Use the Agg backend
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
@@ -19,8 +23,34 @@ def get_income():
     conn.close()
     return rows
 
+def generate_expense_chart():
+    expenses = get_expenses()
+    df = pd.DataFrame(expenses, columns=['ID', 'Date', 'Category', 'Amount', 'Description'])
+    df['Date'] = pd.to_datetime(df['Date'])
+    df.set_index('Date', inplace=True)
+    df.groupby('Category')['Amount'].sum().plot(kind='bar')
+    plt.title('Expenses by Category')
+    plt.xlabel('Category')
+    plt.ylabel('Amount')
+    plt.savefig('static/expense_chart.png')
+    plt.close()
+
+def generate_income_chart():
+    income = get_income()
+    df = pd.DataFrame(income, columns=['ID', 'Date', 'Source', 'Amount', 'Description'])
+    df['Date'] = pd.to_datetime(df['Date'])
+    df.set_index('Date', inplace=True)
+    df.groupby('Source')['Amount'].sum().plot(kind='bar')
+    plt.title('Income by Source')
+    plt.xlabel('Source')
+    plt.ylabel('Amount')
+    plt.savefig('static/income_chart.png')
+    plt.close()
+
 @app.route('/')
 def index():
+    generate_expense_chart()
+    generate_income_chart()
     expenses = get_expenses()
     income = get_income()
     return render_template('index.html', expenses=expenses, income=income)
