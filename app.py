@@ -14,6 +14,9 @@ def get_expenses():
     rows = c.fetchall()
     conn.close()
     return rows
+import db_creator
+from db_creator import ex
+ex()
 
 def get_income():
     conn = sqlite3.connect('finance_manager.db')
