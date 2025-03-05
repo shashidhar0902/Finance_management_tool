@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for
-import sqlite3
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+import sqlite3, os
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')  # Use the Agg backend
@@ -25,6 +25,11 @@ def get_income():
 
 def generate_expense_chart():
     expenses = get_expenses()
+    if not expenses:
+        print("No expense data available to plot.")
+        if os.path.exists('static/expense_chart.png'):
+            os.remove('static/expense_chart.png')
+        return
     df = pd.DataFrame(expenses, columns=['ID', 'Date', 'Category', 'Amount', 'Description'])
     df['Date'] = pd.to_datetime(df['Date'])
     df.set_index('Date', inplace=True)
@@ -37,6 +42,11 @@ def generate_expense_chart():
 
 def generate_income_chart():
     income = get_income()
+    if not income:
+        print("No income data available to plot.")
+        if os.path.exists('static/income_chart.png'):
+            os.remove('static/income_chart.png')
+        return
     df = pd.DataFrame(income, columns=['ID', 'Date', 'Source', 'Amount', 'Description'])
     df['Date'] = pd.to_datetime(df['Date'])
     df.set_index('Date', inplace=True)
@@ -69,6 +79,16 @@ def add_expense():
     conn.close()
     return redirect(url_for('index'))
 
+@app.route('/generate_expense_chart', methods=['POST'])
+def generate_expense_chart_route():
+    generate_expense_chart()
+    return jsonify({'result': 'success'})
+
+@app.route('/generate_income_chart', methods=['POST'])
+def generate_income_chart_route():
+    generate_income_chart()
+    return jsonify({'result': 'success'})
+
 @app.route('/add_income', methods=['POST'])
 def add_income():
     date = request.form['date']
@@ -90,7 +110,7 @@ def delete_expense(id):
     c.execute("DELETE FROM expenses WHERE id = ?", (id,))
     conn.commit()
     conn.close()
-    return redirect(url_for('index'))
+    return jsonify({'result': 'success'})
 
 @app.route('/delete_income/<int:id>', methods=['POST'])
 def delete_income(id):
@@ -99,7 +119,7 @@ def delete_income(id):
     c.execute("DELETE FROM income WHERE id = ?", (id,))
     conn.commit()
     conn.close()
-    return redirect(url_for('index'))
+    return jsonify({'result': 'success'})
 
 if __name__ == '__main__':
     app.run(debug=True)

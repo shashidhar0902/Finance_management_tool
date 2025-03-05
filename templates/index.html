@@ -77,16 +77,14 @@
                     </thead>
                     <tbody>
                         {% for expense in expenses %}
-                        <tr>
+                        <tr id="expense-{{ expense[0] }}">
                             <td>{{ expense[0] }}</td>
                             <td>{{ expense[1] }}</td>
                             <td>{{ expense[2] }}</td>
                             <td>{{ expense[3] }}</td>
                             <td>{{ expense[4] }}</td>
                             <td>
-                                <form action="/delete_expense/{{ expense[0] }}" method="post" style="display:inline;">
-                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                </form>
+                                <button class="btn btn-danger btn-sm" onclick="deleteExpense({{ expense[0] }})">Delete</button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -111,16 +109,14 @@
                     </thead>
                     <tbody>
                         {% for income in income %}
-                        <tr>
+                        <tr id="income-{{ income[0] }}">
                             <td>{{ income[0] }}</td>
                             <td>{{ income[1] }}</td>
                             <td>{{ income[2] }}</td>
                             <td>{{ income[3] }}</td>
                             <td>{{ income[4] }}</td>
                             <td>
-                                <form action="/delete_income/{{ income[0] }}" method="post" style="display:inline;">
-                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                </form>
+                                <button class="btn btn-danger btn-sm" onclick="deleteIncome({{ income[0] }})">Delete</button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -132,18 +128,62 @@
         <div class="row mt-4">
             <div class="col-md-6">
                 <h2>Expense Chart</h2>
-                <img src="{{ url_for('static', filename='expense_chart.png') }}" class="img-fluid" alt="Expense Chart">
+                <img id="expense-chart" src="{{ url_for('static', filename='expense_chart.png') }}" class="img-fluid" alt="Expense Chart">
             </div>
             <div class="col-md-6">
                 <h2>Income Chart</h2>
-                <img src="{{ url_for('static', filename='income_chart.png') }}" class="img-fluid" alt="Income Chart">
+                <img id="income-chart" src="{{ url_for('static', filename='income_chart.png') }}" class="img-fluid" alt="Income Chart">
             </div>
         </div>
     </div>
 
     <!-- Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        function deleteExpense(id) {
+            $.ajax({
+                url: '/delete_expense/' + id,
+                type: 'POST',
+                success: function(response) {
+                    $('#expense-' + id).remove();
+                    updateExpenseChart();
+                }
+            });
+        }
+    
+        function deleteIncome(id) {
+            $.ajax({
+                url: '/delete_income/' + id,
+                type: 'POST',
+                success: function(response) {
+                    $('#income-' + id).remove();
+                    updateIncomeChart();
+                }
+            });
+        }
+    
+        function updateExpenseChart() {
+            $.ajax({
+                url: '/generate_expense_chart',
+                type: 'POST',
+                success: function(response) {
+                    $('#expense-chart').attr('src', '/static/expense_chart.png?' + new Date().getTime());
+                }
+            });
+        }
+    
+        function updateIncomeChart() {
+            $.ajax({
+                url: '/generate_income_chart',
+                type: 'POST',
+                success: function(response) {
+                    $('#income-chart').attr('src', '/static/income_chart.png?' + new Date().getTime());
+                }
+            });
+        }
+    </script>
 </body>
 </html>
