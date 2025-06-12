@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, url_for
+from urllib.parse import quote as url_quote
 import sqlite3, os
 import pandas as pd
 import matplotlib
@@ -59,6 +60,24 @@ def generate_income_chart():
     plt.ylabel('Amount')
     plt.savefig('static/income_chart.png')
     plt.close()
+
+#add a button when clicked exports expenses and income as CSV files
+@app.route('/export_expenses')
+def export_expenses():
+    expenses = get_expenses()
+    df = pd.DataFrame(expenses, columns=['ID', 'Date', 'Category', 'Amount', 'Description'])
+    csv_file = 'static/expenses.csv'
+    df.to_csv(csv_file, index=False)
+    # when clicked, it should download the file no need redirection
+    return redirect(url_for('index', filename='expenses.csv'))
+
+@app.route('/export_income')
+def export_income():
+    income = get_income()
+    df = pd.DataFrame(income, columns=['ID', 'Date', 'Source', 'Amount', 'Description'])
+    csv_file = 'static/income.csv'
+    df.to_csv(csv_file, index=False)
+    return redirect(url_for('index', filename='income.csv'))
 
 @app.route('/')
 def index():
